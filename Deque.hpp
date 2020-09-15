@@ -26,6 +26,7 @@
     bool Deque_##t##_is_full(Deque_##t *);                                                          \
     bool Deque_##t##_is_empty(Deque_##t *);                                                         \
     void Deque_##t##_resize(Deque_##t *);                                                           \
+    bool Deque_##t##_equal(Deque_##t, Deque_##t);                                                   \
     Deque_##t##_Iterator Deque_##t##_begin(Deque_##t *);                                            \
     Deque_##t##_Iterator  Deque_##t##_end(Deque_##t *);                                             \
                                                                                                     \
@@ -62,14 +63,14 @@
                                                                                                     \
         Deque_##t##_Iterator (*begin)(Deque_##t *) = &Deque_##t##_begin;                            \
         Deque_##t##_Iterator (*end)(Deque_##t *) = &Deque_##t##_end;                                \
-        bool (*comparator)(const t&, const t&);                                                     \
+        bool (*is_smaller)(const t&, const t&);                                                     \
                                                                                                     \
         const char type_name[strlen(#t) + 1] = #t;                                                  \
                                                                                                     \
     };                                                                                              \
     Deque_##t* Deque_##t##_ctor( Deque_##t *q, bool (*comparator)(const t&, const t&) ) {           \
         q->data = (t *) malloc(sizeof(t) * DEQUE_INITIAL_CAPACITY );                                \
-        q->comparator = comparator;                                                                 \
+        q->is_smaller = comparator;                                                                 \
         return q;                                                                                   \
     }                                                                                               \
     std::size_t Deque_##t##_size(Deque_##t *q) {                                                    \
@@ -162,6 +163,26 @@
             .deq = q,                                                                               \
             ._begin = false,                                                                        \
         };                                                                                          \
+    }                                                                                               \
+    bool Deque_##t##_equal(Deque_##t q1, Deque_##t q2) {                                            \
+        if (                                                                                        \
+                q1.is_smaller != q2.is_smaller  ||                                                  \
+                q1.size(&q1) != q2.size(&q2)    ||                                                  \
+                q1._capacity != q2._capacity                                                        \
+            )                                                                                       \
+            return false;                                                                           \
+        Deque_##t##_Iterator it1 = q1.begin(&q1), it2 = q2.begin(&q2);                              \
+        Deque_##t##_Iterator end1 = q1.end(&q1), end2 = q2.end(&q2);                                \
+        for (;                                                                                      \
+                !Deque_##t##_Iterator_equal(it1, end1) && !Deque_##t##_Iterator_equal(it2, end2);   \
+                it1.inc(&it1), it2.inc(&it2)                                                        \
+            )                                                                                       \
+            if (                                                                                    \
+                    it1.deq->is_smaller(it1.deref(&it1), it2.deref(&it2)) ||                        \
+                    it2.deq->is_smaller(it2.deref(&it2), it1.deref(&it1))                           \
+                )                                                                                   \
+                return false;                                                                       \
+        return true;                                                                                \
     }
 
 #endif //CS540_ASSIGNMENT1_HVADODA1_DEQUE_HPP
