@@ -17,8 +17,9 @@
     struct Deque_##t##_Iterator;                                                                    \
                                                                                                     \
     std::size_t  Deque_##t##_size(Deque_##t *);                                                     \
-    t    Deque_##t##_front(Deque_##t *);                                                            \
-    t    Deque_##t##_back(Deque_##t *);                                                             \
+    t&   Deque_##t##_at(Deque_##t *, int);                                                          \
+    t&   Deque_##t##_front(Deque_##t *);                                                            \
+    t&   Deque_##t##_back(Deque_##t *);                                                             \
     void Deque_##t##_push_front(Deque_##t *, t);                                                    \
     void Deque_##t##_push_back(Deque_##t *, t);                                                     \
     t    Deque_##t##_pop_front(Deque_##t *);                                                        \
@@ -34,7 +35,7 @@
                                                                                                     \
     void Deque_##t##_Iterator_inc(Deque_##t##_Iterator *);                                          \
     void Deque_##t##_Iterator_dec(Deque_##t##_Iterator *);                                          \
-    t    Deque_##t##_Iterator_deref(Deque_##t##_Iterator *);                                        \
+    t&   Deque_##t##_Iterator_deref(Deque_##t##_Iterator *);                                        \
     bool Deque_##t##_Iterator_equal(Deque_##t##_Iterator, Deque_##t##_Iterator);                    \
                                                                                                     \
     struct Deque_##t##_Iterator {                                                                   \
@@ -43,7 +44,7 @@
         bool _begin;                                                                                \
         void (*inc)(Deque_##t##_Iterator *) = &Deque_##t##_Iterator_inc;                            \
         void (*dec)(Deque_##t##_Iterator *) = &Deque_##t##_Iterator_dec;                            \
-        t    (*deref)(Deque_##t##_Iterator *) = &Deque_##t##_Iterator_deref;                        \
+        t&   (*deref)(Deque_##t##_Iterator *) = &Deque_##t##_Iterator_deref;                        \
     };                                                                                              \
     struct Deque_##t {                                                                              \
         /* Data Members: */                                                                         \
@@ -53,9 +54,9 @@
                                                                                                     \
         /* Functions: */                                                                            \
         std::size_t  (*size)(Deque_##t *) = &Deque_##t##_size;                                      \
-        t    at(Deque_##t *, int);                                                                  \
-        t    (* front)(Deque_##t *) = &Deque_##t##_front;                                           \
-        t    (* back)(Deque_##t *) = &Deque_##t##_back;                                             \
+        t&   (*at)(Deque_##t *, int) = &Deque_##t##_at;                                             \
+        t&   (* front)(Deque_##t *) = &Deque_##t##_front;                                           \
+        t&   (* back)(Deque_##t *) = &Deque_##t##_back;                                             \
         void (*push_front)(Deque_##t *, t) = &Deque_##t##_push_front;                               \
         void (*push_back)(Deque_##t *, t) = &Deque_##t##_push_back;                                 \
         t    (*pop_front)(Deque_##t *) = &Deque_##t##_pop_front;                                    \
@@ -80,7 +81,7 @@
     std::size_t Deque_##t##_size(Deque_##t *q) {                                                    \
         return q->_size;                                                                            \
     }                                                                                               \
-    t at(Deque_##t *q, int idx) {                                                                   \
+    t& at(Deque_##t *q, int idx) {                                                                  \
         return q->data[idx];                                                                        \
     }                                                                                               \
     bool Deque_##t##_is_empty(Deque_##t *q) {                                                       \
@@ -127,10 +128,10 @@
             q->data[i + diff] = q->data[i];                                                         \
         q->_front += diff;                                                                          \
     }                                                                                               \
-    t Deque_##t##_front(Deque_##t *q) {                                                             \
+    t& Deque_##t##_front(Deque_##t *q) {                                                            \
         return q->data[q->_front];                                                                  \
     }                                                                                               \
-    t Deque_##t##_back(Deque_##t *q) {                                                              \
+    t& Deque_##t##_back(Deque_##t *q) {                                                             \
         int backP = q->_back - 1;                                                                   \
         if (backP < 0)                                                                              \
             backP = q->_capacity - 1;                                                               \
@@ -148,7 +149,7 @@
         if (it->_index == it->deq->_front)                                                          \
             it->_begin = true;                                                                      \
     }                                                                                               \
-    t Deque_##t##_Iterator_deref(Deque_##t##_Iterator *it) {                                        \
+    t& Deque_##t##_Iterator_deref(Deque_##t##_Iterator *it) {                                       \
         return it->deq->data[it->_index];                                                           \
     }                                                                                               \
     bool Deque_##t##_Iterator_equal(Deque_##t##_Iterator it1, Deque_##t##_Iterator it2) {           \
