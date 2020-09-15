@@ -25,10 +25,12 @@
     t    Deque_##t##_pop_back(Deque_##t *);                                                         \
     bool Deque_##t##_is_full(Deque_##t *);                                                          \
     bool Deque_##t##_is_empty(Deque_##t *);                                                         \
-    void Deque_##t##_resize(Deque_##t *);                                                           \
+    void Deque_##t##__resize(Deque_##t *);                                                          \
     bool Deque_##t##_equal(Deque_##t, Deque_##t);                                                   \
     Deque_##t##_Iterator Deque_##t##_begin(Deque_##t *);                                            \
     Deque_##t##_Iterator  Deque_##t##_end(Deque_##t *);                                             \
+    void Deque_##t##_clear(Deque_##t *q);                                                           \
+    void Deque_##t##_dtor(Deque_##t *q);                                                            \
                                                                                                     \
     void Deque_##t##_Iterator_inc(Deque_##t##_Iterator *);                                          \
     void Deque_##t##_Iterator_dec(Deque_##t##_Iterator *);                                          \
@@ -47,6 +49,7 @@
         /* Data Members: */                                                                         \
         t *data;                                                                                    \
         int _size = 0, _capacity = DEQUE_INITIAL_CAPACITY, _front = 0, _back = 0;                   \
+        const char type_name[strlen(#t) + 1] = #t;                                                  \
                                                                                                     \
         /* Functions: */                                                                            \
         std::size_t  (*size)(Deque_##t *) = &Deque_##t##_size;                                      \
@@ -59,13 +62,14 @@
         t    (*pop_back)(Deque_##t *) = &Deque_##t##_pop_back;                                      \
         bool (*empty)(Deque_##t *) = &Deque_##t##_is_empty;                                         \
         bool (*full)(Deque_##t *) = &Deque_##t##_is_full;                                           \
-        void (*_resize)(Deque_##t *) = &Deque_##t##_resize;                                         \
+        void (*_resize)(Deque_##t *) = &Deque_##t##__resize;                                        \
                                                                                                     \
         Deque_##t##_Iterator (*begin)(Deque_##t *) = &Deque_##t##_begin;                            \
         Deque_##t##_Iterator (*end)(Deque_##t *) = &Deque_##t##_end;                                \
         bool (*is_smaller)(const t&, const t&);                                                     \
                                                                                                     \
-        const char type_name[strlen(#t) + 1] = #t;                                                  \
+        void (*clear)(Deque_##t *) = &Deque_##t##_clear;                                            \
+        void (*dtor)(Deque_##t *) = &Deque_##t##_dtor;                                              \
                                                                                                     \
     };                                                                                              \
     Deque_##t* Deque_##t##_ctor( Deque_##t *q, bool (*comparator)(const t&, const t&) ) {           \
@@ -114,7 +118,7 @@
         q->_size--;                                                                                 \
         return q->data[q->_front++];                                                                \
     }                                                                                               \
-    void Deque_##t##_resize(Deque_##t *q) {                                                         \
+    void Deque_##t##__resize(Deque_##t *q) {                                                        \
         int initial_cap = q->_capacity;                                                             \
         q->data = (t *) realloc(q->data, sizeof(t) * (q->_capacity *= DEQUE_GROWTH_FACTOR));        \
         if ((q->_front < q->_back) || !q->_size) return;                                            \
@@ -183,6 +187,12 @@
                 )                                                                                   \
                 return false;                                                                       \
         return true;                                                                                \
+    }                                                                                               \
+    void Deque_##t##_dtor(Deque_##t *q) {                                                           \
+        free(q->data);                                                                              \
+    }                                                                                               \
+    void Deque_##t##_clear(Deque_##t *q) {                                                          \
+        q->_front = q->_back = q->_size = 0;                                                        \
     }
 
 #endif //CS540_ASSIGNMENT1_HVADODA1_DEQUE_HPP
