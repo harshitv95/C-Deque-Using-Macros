@@ -9,8 +9,9 @@
 #define DEQUE_GROWTH_FACTOR     1.5
 #define DEQUE_INITIAL_CAPACITY  10
 
-#include <stdlib.h>
-#include <string.h>
+#include <stdlib.h>     // malloc, free
+#include <string.h>     // strlen(type)
+#include <algorithm>    // std::sort
 
 #define Deque_DEFINE(t)                                                                             \
     struct Deque_##t;                                                                               \
@@ -32,6 +33,7 @@
     Deque_##t##_Iterator  Deque_##t##_end(Deque_##t *);                                             \
     void Deque_##t##_clear(Deque_##t *q);                                                           \
     void Deque_##t##_dtor(Deque_##t *q);                                                            \
+    void Deque_##t##_sort(Deque_##t *, Deque_##t##_Iterator, Deque_##t##_Iterator);                 \
                                                                                                     \
     void Deque_##t##_Iterator_inc(Deque_##t##_Iterator *);                                          \
     void Deque_##t##_Iterator_dec(Deque_##t##_Iterator *);                                          \
@@ -68,6 +70,10 @@
         Deque_##t##_Iterator (*begin)(Deque_##t *) = &Deque_##t##_begin;                            \
         Deque_##t##_Iterator (*end)(Deque_##t *) = &Deque_##t##_end;                                \
         bool (*is_smaller)(const t&, const t&);                                                     \
+        int (*comparator)(const t&, const t&);                                                      \
+        void (*sort)(Deque_##t *,                                                                   \
+                    Deque_##t##_Iterator,                                                           \
+                    Deque_##t##_Iterator) = &Deque_##t##_sort;                                      \
                                                                                                     \
         void (*clear)(Deque_##t *) = &Deque_##t##_clear;                                            \
         void (*dtor)(Deque_##t *) = &Deque_##t##_dtor;                                              \
@@ -81,7 +87,7 @@
     std::size_t Deque_##t##_size(Deque_##t *q) {                                                    \
         return q->_size;                                                                            \
     }                                                                                               \
-    t& at(Deque_##t *q, int idx) {                                                                  \
+    t& Deque_##t##_at(Deque_##t *q, int idx) {                                                      \
         return q->data[idx];                                                                        \
     }                                                                                               \
     bool Deque_##t##_is_empty(Deque_##t *q) {                                                       \
@@ -156,18 +162,24 @@
         return it1._index == it2._index && it1._begin == it2._begin;                                \
     }                                                                                               \
     Deque_##t##_Iterator Deque_##t##_begin(Deque_##t *q) {                                          \
-        return {                                                                                    \
+        Deque_##t##_Iterator it;                                                                    \
+        it._index = q->_front; it.deq = q; it._begin = true;                                        \
+        /*return {                                                                                    \
             ._index = q->_front,                                                                    \
             .deq = q,                                                                               \
             ._begin = true,                                                                         \
-        };                                                                                          \
+        };*/                                                                                        \
+        return it;                                                                                  \
     }                                                                                               \
     Deque_##t##_Iterator Deque_##t##_end(Deque_##t *q) {                                            \
-        return {                                                                                    \
+        Deque_##t##_Iterator it;                                                                    \
+        it._index = q->_back; it.deq = q; it._begin = false;                                        \
+        /*return {                                                                                    \
             ._index = q->_back,                                                                     \
             .deq = q,                                                                               \
             ._begin = false,                                                                        \
-        };                                                                                          \
+        };*/                                                                                        \
+        return it;                                                                                  \
     }                                                                                               \
     bool Deque_##t##_equal(Deque_##t q1, Deque_##t q2) {                                            \
         if (                                                                                        \
@@ -194,6 +206,24 @@
     }                                                                                               \
     void Deque_##t##_clear(Deque_##t *q) {                                                          \
         q->_front = q->_back = q->_size = 0;                                                        \
+    }                                                                                               \
+    void Deque_##t##_sort(Deque_##t *q,                                                             \
+                          Deque_##t##_Iterator start,                                               \
+                          Deque_##t##_Iterator end) {                                               \
+        const int len = end._index - start._index + (start._index > end._index ? q->_capacity : 0); \
+        t data[len];                                                                                \
+        for (int n=0, i=start._index; n<len; i++, n++) {                                            \
+            if (i >= q->_capacity)                                                                  \
+                i = 0;                                                                              \
+            data[n] = q->at(q, i);                                                                  \
+        }                                                                                           \
+        std::sort(data, data + len, q->is_smaller);                                                 \
+                                                                                                    \
+        for (int n=0, i=start._index; n<len; i++, n++) {                                            \
+            if (i >= q->_capacity)                                                                  \
+                i = 0;                                                                              \
+            q->at(q, i) = data[n];                                                                  \
+        }                                                                                           \
     }
 
 #endif //CS540_ASSIGNMENT1_HVADODA1_DEQUE_HPP
