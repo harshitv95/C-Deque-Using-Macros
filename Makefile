@@ -1,10 +1,17 @@
-C=g++
-CFLAGS=-ldl -Wall -Wextra -pedantic
-DEPS = Deque.h
-OBJ = test.o 
+CC = g++
 
-%.o: %.c $(DEPS)
-	$(CC) -c -o $@ $< $(CFLAGS)
+  # compiler flags:
+  #   #  -g    adds debugging information to the executable file
+    #  -Wall turns on most, but not all, compiler warnings
+CFLAGS = -Wl,--no-as-needed -ldl -Wall -Wextra -pedantic
+    #
+    #      # the build target executable:
+TARGET = test
 
-Deque: $(OBJ)
-	$(CC) -o $@ $^ $(CFLAGS)
+all: $(TARGET)
+
+$(TARGET): $(TARGET).cpp
+	$(CC) $(CFLAGS) -o $(TARGET) $(TARGET).cpp
+
+clean:
+	$(RM) $(TARGET)
