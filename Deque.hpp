@@ -12,7 +12,6 @@
 #include <stdlib.h>     // malloc, free
 #include <string.h>     // strlen(type)
 #include <algorithm>    // std::sort
-#include <iostream>
 
 #define Deque_DEFINE(t)                                                                             \
     struct Deque_##t;                                                                               \
@@ -186,8 +185,7 @@
     bool Deque_##t##_equal(Deque_##t q1, Deque_##t q2) {                                            \
         if (                                                                                        \
                 q1.is_smaller != q2.is_smaller  ||                                                  \
-                q1.size(&q1) != q2.size(&q2)    ||                                                  \
-                q1._capacity != q2._capacity                                                        \
+                q1.size(&q1) != q2.size(&q2)                                                        \
             )                                                                                       \
             return false;                                                                           \
         Deque_##t##_Iterator it1 = q1.begin(&q1), it2 = q2.begin(&q2);                              \
@@ -215,19 +213,28 @@
         const int len = start._index == end._index ? q->_size : (end._index - start._index +        \
                 (start._index > end._index ? q->_capacity  : 0));                                   \
         if (len == 0) return;                                                                       \
-        t data[len];                                                                                \
-        for (int n=0, i=start._index; n<len; i++, n++) {                                            \
-            if (i >= q->_capacity)                                                                  \
-                i = 0;                                                                              \
-            data[n] = q->data[i];                                                                   \
+        int start_idx = start._index;                                                               \
+        int end_idx = end._index;                                                                   \
+        if (end._index < start._index) {                                                            \
+            t *data = (t *) malloc(sizeof(t) * q->_capacity);                                       \
+            for (int n=0, i=q->_front; n<q->_size; i++, n++) {                                      \
+                if (i >= q->_capacity)                                                              \
+                    i = 0;                                                                          \
+                data[n] = q->data[i];                                                               \
+            }                                                                                       \
+            free(q->data);                                                                          \
+            start_idx = start._index - q->_front;                                                   \
+            if (start_idx < 0) start_idx += q->_capacity;                                           \
+            end_idx = end._index - q->_front;                                                       \
+            if (end_idx < 0) end_idx += q->_capacity;                                               \
+            q->data = data;                                                                         \
+            q->_front = 0;                                                                          \
+            q->_back = q->_size;                                                                    \
+            start._index = start_idx;                                                               \
+            end._index = end_idx;                                                                   \
         }                                                                                           \
-        std::sort(data, data + len, q->is_smaller);                                                 \
-                                                                                                    \
-        for (int n=0, i=start._index; n<len; i++, n++) {                                            \
-            if (i >= q->_capacity)                                                                  \
-                i = 0;                                                                              \
-            q->data[i] = data[n];                                                                   \
-        }                                                                                           \
+        std::sort(q->data + start_idx, q->data + end_idx, q->is_smaller);                           \
     }
 
 #endif //CS540_ASSIGNMENT1_HVADODA1_DEQUE_HPP
+
